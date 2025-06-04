@@ -1,0 +1,60 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      chemistryProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+chemistryType
+{
+    solver            EulerImplicit;  // ODE solver for chemical source terms (robust for stiff reactions)
+}
+
+chemistry           on;               // Enable chemistry source terms in the simulation
+
+initialChemicalTimeStep 1e-07;        // Initial time step for the internal chemistry solver (can adapt later)
+
+EulerImplicitCoeffs
+{
+    cTauChem        0.2;             // Controls chemistry subcycling:
+                                     // cTauChem = 1 means chemical time step equals flow time step * 1.0
+                                     // Smaller values → more subcycling (better accuracy, more expensive)
+}
+
+odeCoeffs
+{
+    solver          Rosenbrock43;    // Stiff ODE solver used internally by the chemistry model (semi-implicit)
+    absTol          1e-10;            // Absolute tolerance for the ODE solver (controls error per species)
+    relTol          1e-10;            // Relative tolerance (controls acceptable relative error per step)
+}
+
+/*
+chemistryType
+{
+    solver          ode;
+}
+
+chemistry       on;
+
+initialChemicalTimeStep 1e-07;
+
+odeCoeffs
+{
+    solver          seulex;
+    absTol          1e-12;
+    relTol          1e-12;
+}
+*/
+
+#include "reactions"
+
+// ************************************************************************* //

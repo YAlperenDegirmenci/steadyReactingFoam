@@ -1,0 +1,179 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    inletSmall
+    {
+/*	
+        type            fixedValue;
+        value           uniform (0 0.03 0);
+*/		
+		type            codedFixedValue;
+		value           uniform (0 0 0);
+		name			theprofileSmall;
+
+		redirectType    SquareInletSmall;
+
+		code
+		#{
+			const vectorField& Cff = patch().Cf();
+			vectorField& field = *this;
+			
+			//from center
+			const scalar y_width = 0.02; 
+			const scalar x_width = 0.02;
+			
+			const scalar Umax = 0.03;
+			const scalar n = 2;			// power index selected as 2
+
+			vector distance(0, 0, 0);	//It will be used to calculate center of desired patch
+			vector count(0, 0, 0);		//Number of cell faces on the patch
+					
+			forAll(Cff, FaceIndex) 
+			{    
+			
+			const scalar yy =    Cff[FaceIndex][1];  // y    
+			const scalar xx =    Cff[FaceIndex][0];  // x	
+					
+			count[0] = count[0] + 1;
+			distance[0] = distance[0] + xx;
+			distance[1] = distance[1] + yy;
+			
+			}
+			
+			//Info << "The value of sum of all distances: " << distance << endl;		
+			//Info << "The value of count: " << count << endl;	
+			
+			distance = distance / count[0];   //center calculation by taking the average of face centers distances to the origin
+			//Info << "The value of centerDistance: " << distance << endl;
+
+			forAll(Cff, FaceIndex) 
+			{
+				
+			const scalar yy =    Cff[FaceIndex][1] - distance[1];   // faces y distance according to patch center 
+			const scalar xx =    Cff[FaceIndex][0] - distance[0];   // faces x distance according to patch center 
+			
+			const scalar y_power = pow((( yy ) / y_width ), n);
+			const scalar x_power = pow((( xx ) / x_width ), n);
+			const scalar first_term = 1 - y_power;
+			const scalar second_term = 1 - x_power; 
+			
+			vector vec(0, second_term, 0);		
+
+			field[FaceIndex] = vec; // updating vector field
+			
+			}	
+				
+			forAll(field, Index)
+			{
+				field[Index] = Umax * field[Index];	// updating according to maximum velocity
+			}
+			
+		#};;	
+		
+    }	
+    inletLarge
+    {
+/*	
+		type            fixedValue;
+        value           uniform (0.01 0 0);
+*/		
+		type            codedFixedValue;
+		value           uniform (0 0 0);
+		name			theprofileLarge;
+
+		redirectType    SquareInletLarge;
+
+		code
+		#{
+			const vectorField& Cff = patch().Cf();
+			vectorField& field = *this;
+			
+			//from center
+			const scalar y_width = 0.08; 
+			const scalar x_width = 0.08;
+			
+			const scalar Umax = 0.01;
+			const scalar n = 2;			// power index selected as 2
+
+			vector distance(0, 0, 0);	//It will be used to calculate center of desired patch
+			vector count(0, 0, 0);		//Number of cell faces on the patch
+					
+			forAll(Cff, FaceIndex) 
+			{    
+			
+			const scalar yy =    Cff[FaceIndex][1];  // y    
+			const scalar xx =    Cff[FaceIndex][0];  // x	
+					
+			count[0] = count[0] + 1;
+			distance[0] = distance[0] + xx;
+			distance[1] = distance[1] + yy;
+			
+			}
+			
+			//Info << "The value of sum of all distances: " << distance << endl;		
+			//Info << "The value of count: " << count << endl;	
+			
+			distance = distance / count[0];   //center calculation by taking the average of face centers distances to the origin
+			//Info << "The value of centerDistance: " << distance << endl;
+
+			forAll(Cff, FaceIndex) 
+			{
+				
+			const scalar yy =    Cff[FaceIndex][1] - distance[1];   // faces y distance according to patch center 
+			const scalar xx =    Cff[FaceIndex][0] - distance[0];   // faces x distance according to patch center 
+			
+			const scalar y_power = pow((( yy ) / y_width ), n);
+			const scalar x_power = pow((( xx ) / x_width ), n);
+			const scalar first_term = 1 - y_power;
+			const scalar second_term = 1 - x_power; 
+			
+			vector vec(first_term, 0, 0);		
+
+			field[FaceIndex] = vec; // updating vector field
+			
+			}	
+				
+			forAll(field, Index)
+			{
+				field[Index] = Umax * field[Index];	// updating according to maximum velocity
+			}
+			
+		#};;		
+    }
+	wall
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+	}
+    outlet
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+
+// ************************************************************************* //

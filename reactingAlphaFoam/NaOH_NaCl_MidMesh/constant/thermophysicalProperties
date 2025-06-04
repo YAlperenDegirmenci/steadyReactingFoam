@@ -1,0 +1,47 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermophysicalProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+thermoType
+{
+    type            heRhoThermo;        // Thermo class using h (enthalpy) and rho (density) as primary variables
+                                        // Suitable for incompressible, constant-density flows
+
+    mixture         coefficientWilkeMultiComponentMixture;
+                                        // Mixture model that calculates transport and thermophysical properties
+                                        // for gas/liquid mixtures using the Wilke mixing rule (based on mass/mole fractions)
+
+    transport       const;              // Use constant viscosity and Prandtl number (from transportProperties or species dictionaries)
+
+    thermo          hConst;             // Constant Cp (specific heat) model
+                                        // Ignores temperature dependence in enthalpy (Cp treated as constant)
+
+    energy          sensibleEnthalpy;   // Solves energy equation in terms of sensible enthalpy (h)
+                                        // No chemical or latent heat contributions unless added separately
+
+    equationOfState rhoConst;           // Assumes constant density (ρ) for each species
+                                        // Ideal for liquids where ρ does not vary significantly
+
+    specie          specie;             // Standard OpenFOAM species definition block
+                                        // Includes molar mass, name, etc.
+}
+
+defaultSpecie H2O;                      // Sets H2O as the background fluid for reaction and thermodynamics
+                                        // This acts as the 'carrier' or base fluid in your mixture
+
+
+#include "thermo.properties"
+
+// ************************************************************************* //

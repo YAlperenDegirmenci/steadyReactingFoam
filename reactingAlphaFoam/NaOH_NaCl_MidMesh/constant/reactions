@@ -1,0 +1,83 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Reference:
+    Bui-Pham, M. N. (1992).
+    Studies in structures of lam inar hydrocarbon flames.
+    PhD Thesis, University of California, San Diego
+
+Notes:
+    This mechanism was developed for simulating this exact counter-flow flame
+    configuration. It should not be considered general-purpose.
+
+\*---------------------------------------------------------------------------*/
+
+/*
+    === Arrhenius Rate Law ===
+
+    The rate constant k(T) is computed as:
+
+        k(T) = A · T^β · exp(-Ta / T)
+
+    Where:
+      - A:    Pre-exponential factor [units depend on reaction order]
+      - β:    Temperature exponent (dimensionless)
+      - Ta:   Activation temperature = Ea / R [K]
+      - T:    Local temperature [K]
+
+    For isothermal systems with β = 0 and Ta = 0, the rate becomes:
+        k = A (constant)
+
+    The reaction rate R is:
+        R = k · [Reactants]  →  [mol/(m³·s)]
+*/
+
+reactions
+{
+    neutralization
+    {
+        type    irreversibleArrhenius;          // This is a one-way reaction using the Arrhenius rate law
+        reaction "H + OH = H2O";                // Forward neutralization reaction: H⁺ + OH⁻ → H₂O
+												// Pre-exponential factor (rate constant): 1e8 m³/(mol·s)
+        A		1.4e11;                         // Controls how fast the reaction proceeds (diffusion-limited here)
+        beta    0;                              // Temperature exponent (no T-dependence since beta = 0)
+        Ta      0;                              // Activation temperature (K); 0 = no thermal barrier (instantaneous at all T)
+    }
+
+    waterDissociation
+    {
+        type    irreversibleArrhenius;          // Also modeled as one-way, even though this is conceptually the reverse
+        reaction "H2O = H + OH";                // Water self-ionization (auto-dissociation): H₂O → H⁺ + OH⁻
+												// Much smaller rate constant to match real equilibrium at 25 °C (Kw ≈ 1e-14)
+        A		2.5298e-5;                      // Tuned so the system reaches pH ≈ 7 at equilibrium
+        beta    0;                              // No temperature dependence
+        Ta      0;                              // No activation energy barrier
+    }  
+	
+	NaOHDissociation
+	{
+		type    irreversibleArrhenius;
+		reaction "NaOH = Na + OH";
+		A       1e11;
+		beta    0;
+		Ta      0;
+	}
+
+	HClDissociation
+	{
+		type    irreversibleArrhenius;
+		reaction "HCl = H + Cl";
+		A       1e11;
+		beta    0;
+		Ta      0;
+	}
+
+  	
+}
+
+
+// ************************************************************************* //

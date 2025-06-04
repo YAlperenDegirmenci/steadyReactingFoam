@@ -1,0 +1,58 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+
+volFluxOut
+{
+	type            surfaceFieldValue;
+	libs            ("libfieldFunctionObjects.so");
+
+	writeControl    timeStep;
+	writeInterval   1;
+
+	writeFields     false;
+	log             false;
+	regionType  patch;
+
+	name outlet;
+	fields (phi);
+	operation sum;
+}
+volfluxInLarge
+{
+	type            surfaceFieldValue;
+	libs            ("libfieldFunctionObjects.so");
+
+	writeControl    timeStep;
+	writeInterval   1;
+
+	writeFields     false;
+	log             false;
+	regionType  patch;
+
+	name inletLarge;
+	fields (phi);
+	operation sum;
+}
+volfluxInSmall
+{
+	type            surfaceFieldValue;
+	libs            ("libfieldFunctionObjects.so");
+
+	writeControl    timeStep;
+	writeInterval   1;
+
+	writeFields     false;
+	log             false;
+	regionType  patch;
+
+	name inletSmall;
+	fields (phi);
+	operation sum;
+}
+
+// ************************************************************************* //

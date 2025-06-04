@@ -1,0 +1,93 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     reactingAlphaFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         100;
+
+deltaT          1e-6;
+
+writeControl    adjustableRunTime;
+
+writeInterval   50;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  12;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   12;
+
+runTimeModifiable true;
+
+adjustTimeStep  yes;
+
+maxCo           0.2;
+
+functions
+{
+	#include "myProbes"
+	#include "volFlux"
+	#include "minMax"
+
+    pHField
+    {
+        type            coded;
+        libs            ("libutilityFunctionObjects.so");
+        name            pHField;
+		startTime		1;
+		writeControl    writeTime;
+		
+        codeWrite
+        #{
+            const volScalarField& H = mesh().lookupObject<volScalarField>("H");
+
+            scalar rho = 998;           // kg/m³
+            scalar M_Hplus = 1.008e-3;  // kg/mol
+
+            volScalarField pH
+            (
+                IOobject
+                (
+                    "pH",
+                    mesh().time().timeName(),
+                    mesh(),
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+				//-log10((H * rho / M_Hplus) * 1e-3)  // No limiter
+				-log10(max((H * rho / M_Hplus) * 1e-3, scalar(1e-20)))  // convert mol/m³ → mol/L
+            );
+
+            pH.write();
+        #};
+    }
+
+}
+
+
+// ************************************************************************* //
